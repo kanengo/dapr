@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/dapr/dapr/utils"
 	"strings"
 	"sync"
 
@@ -287,6 +288,10 @@ func extractCloudEvent(event map[string]interface{}) (runtimev1pb.TopicEventBulk
 			}
 		} else if contenttype.IsJSONContentType(envelope.DataContentType) || contenttype.IsCloudEventContentType(envelope.DataContentType) {
 			envelope.Data, _ = json.Marshal(data)
+		} else {
+			if s, ok := data.(string); ok {
+				envelope.Data = utils.String2Bytes(s)
+			}
 		}
 	}
 	extensions, extensionsErr := extractCloudEventExtensions(event)

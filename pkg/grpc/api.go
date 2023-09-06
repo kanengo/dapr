@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	gonanoid "github.com/matoous/go-nanoid/v2"
 	"io"
 	"strconv"
 	"sync"
@@ -54,7 +55,6 @@ import (
 	"github.com/dapr/dapr/pkg/resiliency/breaker"
 	"github.com/dapr/dapr/pkg/runtime/channels"
 	runtimePubsub "github.com/dapr/dapr/pkg/runtime/pubsub"
-	"github.com/dapr/dapr/utils"
 )
 
 const daprHTTPStatusHeader = "dapr-http-status"
@@ -341,7 +341,10 @@ func (a *api) BulkPublishEventAlpha1(ctx context.Context, in *runtimev1pb.BulkPu
 	entries := make([]pubsub.BulkMessageEntry, len(in.Entries))
 	for i, entry := range in.Entries {
 		// Validate entry_id
-		if _, ok := entryIdSet[entry.EntryId]; ok || entry.EntryId == "" {
+		if entry.EntryId == "" {
+			entry.EntryId = gonanoid.Must(15)
+		}
+		if _, ok := entryIdSet[entry.EntryId]; ok {
 			err := status.Errorf(codes.InvalidArgument, messages.ErrPubsubMarshal, in.Topic, in.PubsubName, "entryId is duplicated or not present for entry")
 			apiServerLogger.Debug(err)
 			return &runtimev1pb.BulkPublishResponse{}, err
@@ -352,9 +355,10 @@ func (a *api) BulkPublishEventAlpha1(ctx context.Context, in *runtimev1pb.BulkPu
 		entries[i].Event = entry.Event
 		// Populate entry metadata with request level metadata. Entry level metadata keys
 		// override request level metadata.
-		if entry.Metadata != nil {
-			entries[i].Metadata = utils.PopulateMetadataForBulkPublishEntry(in.Metadata, entry.Metadata)
-		}
+		//if entry.Metadata != nil {
+		//	entries[i].Metadata = utils.PopulateMetadataForBulkPublishEntry(in.Metadata, entry.Metadata)
+		//}
+		entries[i].Metadata = entry.Metadata
 
 		if !rawPayload {
 			// Extract trace context from context.

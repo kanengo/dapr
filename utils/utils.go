@@ -18,7 +18,9 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
+	"unsafe"
 
 	"golang.org/x/exp/slices"
 	"k8s.io/client-go/kubernetes"
@@ -210,4 +212,14 @@ func GetNamespaceOrDefault(defaultNamespace string) string {
 		namespace = defaultNamespace
 	}
 	return namespace
+}
+
+func String2Bytes(s string) []byte {
+	sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
+	bh := reflect.SliceHeader{
+		Data: sh.Data,
+		Len:  sh.Len,
+		Cap:  sh.Len,
+	}
+	return *(*[]byte)(unsafe.Pointer(&bh))
 }

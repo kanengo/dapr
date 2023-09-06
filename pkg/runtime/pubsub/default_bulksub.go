@@ -15,9 +15,9 @@ package pubsub
 
 import (
 	"context"
+	gonanoid "github.com/matoous/go-nanoid/v2"
 	"time"
 
-	"github.com/google/uuid"
 	"golang.org/x/exp/maps"
 
 	contribPubsub "github.com/dapr/components-contrib/pubsub"
@@ -63,13 +63,13 @@ func (p *defaultBulkSubscriber) BulkSubscribe(ctx context.Context, req contribPu
 
 	// Subscribe to the topic and listen for messages.
 	return p.p.Subscribe(ctx, req, func(ctx context.Context, msg *contribPubsub.NewMessage) error {
-		entryId, err := uuid.NewRandom() //nolint:stylecheck
+		entryId, err := gonanoid.New(15) //nolint:stylecheck
 		if err != nil {
 			return err
 		}
 
 		bulkMsgEntry := contribPubsub.BulkMessageEntry{
-			EntryId:  entryId.String(),
+			EntryId:  entryId,
 			Event:    msg.Data,
 			Metadata: msg.Metadata,
 		}
